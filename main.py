@@ -3,6 +3,7 @@ import os
 from time import process_time
 
 import requests
+
 from PyQt5.QtGui import QPixmap, QPainter, QIcon
 from PyQt5.QtWidgets import (QApplication, QWidget, QLabel, QLineEdit, QPushButton, QVBoxLayout)
 from PyQt5.QtCore import Qt
@@ -112,7 +113,7 @@ class WeatherApp(QWidget):
 
         api_key = "5e51448dac9304ffc5ed10e19d0fd4c9"
         city = self.city_input.text()
-        url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}"
+        url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&lang=tr"
 
         try:
             response = requests.get(url)
@@ -169,7 +170,7 @@ class WeatherApp(QWidget):
 
         self.temperature_label.setText(f"{temperature_celsius:.0f}°C")
         self.emoji_label.setText(self.get_weather_emoji(weather_id))
-        self.description_label.setText(weather_description)
+        self.description_label.setText(weather_description.upper())
 
     @staticmethod
     def get_weather_emoji(weather_id):
