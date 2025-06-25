@@ -4,22 +4,22 @@ from time import process_time
 
 import requests
 
-from PyQt5.QtGui import QPixmap, QPainter, QIcon
+from PyQt5.QtGui import QPixmap, QPainter, QIcon, QPalette, QColor
 from PyQt5.QtWidgets import (QApplication, QWidget, QLabel, QLineEdit, QPushButton, QVBoxLayout)
-from PyQt5.QtCore import Qt
-import  urllib.request
+from PyQt5.QtCore import Qt,QTimer
 
 class WeatherApp(QWidget):
 
     def __init__(self):
         super().__init__()
-        self.city_label = QLabel("Şehir Adı", self)
         self.city_input = QLineEdit(self)
         self.get_weather_button = QPushButton("Bilgileri Getir", self)
+        self.location_button = QPushButton("Konumdan Getir", self)
         self.temperature_label = QLabel(self)
         self.emoji_label = QLabel(self)
         self.description_label = QLabel(self)
         self.background = QPixmap(self.resource_path(("background.jpg")))
+        self.dummy_label = QLabel(self)
         self.initUI()
 
     @staticmethod
@@ -35,13 +35,13 @@ class WeatherApp(QWidget):
 
     def initUI(self):
         self.setWindowTitle("Weather App")
-        self.setWindowIcon(QIcon(self.resource_path(("icon.png"))))
+        self.setWindowIcon(QIcon(self.resource_path("icon.png")))
 
         vbox = QVBoxLayout()
-
-        vbox.addWidget(self.city_label)
+        vbox.addWidget(self.dummy_label)
         vbox.addWidget(self.city_input)
         vbox.addWidget(self.get_weather_button)
+        vbox.addWidget(self.location_button)
         vbox.addWidget(self.temperature_label)
         vbox.addWidget(self.emoji_label)
         vbox.addWidget(self.description_label)
@@ -49,26 +49,28 @@ class WeatherApp(QWidget):
 
         self.setLayout(vbox)
 
-        self.city_label.setAlignment(Qt.AlignCenter)
+        self.dummy_label.setFocus()
+
         self.city_input.setAlignment(Qt.AlignCenter)
         self.temperature_label.setAlignment(Qt.AlignCenter)
         self.emoji_label.setAlignment(Qt.AlignCenter)
         self.description_label.setAlignment(Qt.AlignCenter)
 
-        self.city_label.setObjectName("city_label")
+
+        self.city_input.setPlaceholderText("Şehir Adı")
         self.city_input.setObjectName("city_input")
         self.get_weather_button.setObjectName("get_weather_button")
+        self.location_button.setObjectName("location_button")
         self.temperature_label.setObjectName("temperature_label")
         self.emoji_label.setObjectName("emoji_label")
         self.description_label.setObjectName("description_label")
 
+
+        palette = self.city_input.palette()
+        palette.setColor(QPalette.PlaceholderText, QColor("#ffffff"))
+        self.city_input.setPalette(palette)
+
         self.setFixedSize(450, 500)
-
-
-
-
-
-        urllib.request.urlretrieve("https://galeri.netfotograf.com/images/medium/2B722ED12B593280.jpg", "background.jpg")
 
 
 
@@ -78,15 +80,27 @@ class WeatherApp(QWidget):
                 background: transparent;
                 font-family: calibri;
             }
-            QLabel#city_label{
-                font-size: 40px;
-            }
             
             QLineEdit#city_input{
                 font-size: 40px;
+                color: white;
+                background: transparent;
+                border: none;
+                border-bottom: 2px solid white;
+                border-top: 2px solid white;
+            }
+            
+            QLineEdit#city_input::placeholder{
+                color: darkgray;
             }
             
             QPushButton#get_weather_button{
+                font-size: 30px;
+                font-weight: bold;
+                background-color: #5F9EA0;
+            }          
+             
+            QPushButton#location_button{
                 font-size: 30px;
                 font-weight: bold;
                 background-color: #5F9EA0;
@@ -94,20 +108,41 @@ class WeatherApp(QWidget):
             
             QLabel#temperature_label{
                 font-size: 75px;
+                color: white;
             }
             
             QLabel#emoji_label{
                 font-size: 100px;
                 font-family: Segoe UI emoji;
+                color: white;
             }
             
             QLabel#description_label{
                 font-size: 50px;
+                color: white;
             }                   
                  
         """)
 
+
+
         self.get_weather_button.clicked.connect(self.get_weather)
+        self.location_button.clicked.connect(self.get_location_and_weather)
+
+
+    def get_location_and_weather(self):
+        try:
+            response = requests.get("http://ip-api.com/json/")
+            data = response.json()
+
+            if data["status"] == "success":
+                city = data["city"]
+                self.city_input.setText(city)
+                self.get_weather_by_city(city)
+            else:
+                self.display_error("Konum alınamadı.")
+        except Exception as e:
+            self.display_error(f"Konum hatası:\n{e}")
 
     def get_weather(self):
 
@@ -171,6 +206,23 @@ class WeatherApp(QWidget):
         self.temperature_label.setText(f"{temperature_celsius:.0f}°C")
         self.emoji_label.setText(self.get_weather_emoji(weather_id))
         self.description_label.setText(weather_description.upper())
+
+    def get_weather_by_city(self, city):
+        api_key = "5e51448dac9304ffc5ed10e19d0fd4c9"
+        url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&lang=tr"
+
+        try:
+            response = requests.get(url)
+            response.raise_for_status()
+            data = response.json()
+
+            if data["cod"] == 200:
+
+               self.display_weather(data)
+            else:
+               self.display_error("Şehir bulunamadı.")
+        except Exception as e:
+               self.display_error(f"Hata oluştu:\n{e}")
 
     @staticmethod
     def get_weather_emoji(weather_id):

@@ -1,5 +1,4 @@
-('C:\\Users\\husta\\Desktop\\yazilim denemeler\\python '
- 'deneme\\WeatherAPI\\build\\main\\PYZ-00.pyz',
+('C:\\Users\\husta\\Desktop\\python\\WeatherAPI\\build\\main\\PYZ-00.pyz',
  [('PyQt5',
    'C:\\Users\\husta\\Desktop\\yazilim denemeler\\python '
    'deneme\\WeatherAPI\\venv\\Lib\\site-packages\\PyQt5\\__init__.py',
